@@ -1,0 +1,64 @@
+---
+title: "lidar lesson"
+author: "Jeffrey Stephens"
+date: "June 21, 2016"
+output: html_document
+---
+
+```{r}
+library(raster)
+library(rgdal)
+
+```
+
+```{r}
+chm <- raster("../NEONdata/D17-California/TEAK/2013/lidar/TEAK_lidarCHM.tif")
+
+plot(chm)
+```
+```{r}
+chm[chm==0] <- NA
+hist(chm, xlab="Tree Height (m)")
+```
+```{r}
+aspect <- raster("../NEONdata/D17-California/TEAK/2013/lidar/TEAK_lidarAspect.tif")
+plot(aspect, main= "Aspect data for TEAketle Field Site")
+```
+
+## Create Classification Matrix
+```{r}
+#Create matrix
+class.m <- c(0,45,1,
+             45, 135, NA,
+             135,225,2,
+             225,315,NA,
+             315, 360, 1)
+rcl.m <-matrix(class.m, ncol =3, byrow=TRUE)
+rcl.m
+
+```
+
+#reclassify
+
+```{r}
+asp.ns <- reclassify(aspect, rcl.m)
+plot(asp.ns, main = "North and South Facing Slopes")
+```
+## Export Geotiff
+```{r, eval=FALSE} 
+writeRaster(asp.ns, file="../outputs/TEAK/TEAK_nsAspect2.tif", options="COMPRESS=LZW",NAflag=-9999)
+```
+#Mask Data
+```{r}
+asp.ns
+
+ndvi <- raster("../NEONdata/D17-California/TEAK/2013/spectrometer/veg_index/TEAK_NDVI.tif")
+
+plot(ndvi, ndvi="NDVI for Teakettle Field Site")
+
+nFacing.ndvi <- mask(ndvi, asp.ns)
+
+plot(nFacing.ndvi)
+
+```
+
